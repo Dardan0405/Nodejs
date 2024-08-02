@@ -1,19 +1,24 @@
+const path = require('path');
 
-//To Create a new file with name hi.txt and the string Hi from node 
-// const fs = require("fs") = To import the Library FILESTSYTEM
-// fs.writeFileSync("hi.txt","Hi from Node")
+const express = require('express');
+const bodyParser = require('body-parser');
 
+const app = express();
 
-const http = require("http")
-const routes = require("./routes")
-// const fs = require('fs')
-//req stand for request 
-//res stand for response
-const server = http.createServer(routes)
-    // console.log(req.url, req.method, req.headers)
-    // const method = req.method
-    // const url = req.url
-    
-   
+app.set('view engine', 'pug');
+app.set('views', 'views');
 
-server.listen(3002) //Server.listen start the server on localhost 3000 or if we call different number it start the server on that number
+const adminData = require('./routes/admin');
+const shopRoutes = require('./routes/shop');
+
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use('/admin', adminData.routes);
+app.use(shopRoutes);
+
+app.use((req, res, next) => {
+    res.status(404).sendFile(path.join(__dirname, 'views', '404.html'));
+});
+
+app.listen(3004);
