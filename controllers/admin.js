@@ -1,3 +1,4 @@
+const { validationResult } = require('express-validator');
 const Product = require('../models/product');
 
 exports.getAddProduct = (req, res, next) => {
@@ -15,9 +16,14 @@ exports.getAddProduct = (req, res, next) => {
 
 exports.postAddProduct = (req, res, next) => {
   const title = req.body.title;
-  const imageUrl = req.body.imageUrl;
+  const image = req.file;
   const price = req.body.price;
   const description = req.body.description;
+  if (!image){
+
+  }
+  const errors = validationResult('error')
+
   const product = new Product({
     title: title,
     price: price,
@@ -100,12 +106,21 @@ exports.getProducts = (req, res, next) => {
     .catch(err => console.log(err));
 };
 
-exports.postDeleteProduct = (req, res, next) => {
-  const prodId = req.body.productId;
-  Product.deleteOne({_id: prodId, userId: res.user._id})
+exports.deleteProduct = (req, res, next) => {
+  const prodId = req.params.productId;
+  Product.findById(prodId)
+  .then(product =>{
+    if(!product){
+      return next(new Error('ProductNot founded.'));
+    }
+    fileHelper.deleteFile(product.imageUrl);
+    return Product.deleteOne({_id: prodId, userId: req.user._id});
+  })
     .then(() => {
       console.log('DESTROYED PRODUCT');
-      res.redirect('/admin/products');
+     res.status(200).json({message: 'Success'});
     })
-    .catch(err => console.log(err));
+    .catch(err =>{
+     res.status(500).json({message: 'Deletinf Product Failed.'})
+    })
 };
